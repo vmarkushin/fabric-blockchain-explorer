@@ -102,6 +102,7 @@ impl PeerCmd {
             return Some(block_info.clone());
         }
 
+        let our_path = "peer_cmd_out";
         let mut peer_cmd = self
             .cmd()
             .arg("channel")
@@ -109,13 +110,13 @@ impl PeerCmd {
             .arg("-c")
             .arg(&self.channel_name)
             .arg(format!("{}", height))
-            .arg("peer_cmd_out")
+            .arg(our_path)
             .spawn()
             .map_err(|e| eprintln!("failed to execute command 'peer' {}", e))
             .ok()?;
         let _ = peer_cmd.wait().ok()?;
 
-        let bytes = fs::read("peer_cmd_out")
+        let bytes = fs::read(our_path)
             .map_err(|e| eprintln!("couldn't open the file: {}", e))
             .ok()?;
         let block: Block = Self::parse_pb(&bytes)?;

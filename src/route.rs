@@ -3,17 +3,24 @@ use mime::Mime;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use typed_html::dom::DOMTree;
+use typed_html::types::LinkType;
 use typed_html::{html, text};
 use warp::reply;
 
 pub async fn blocks(shared: Arc<Mutex<PeerCmd>>) -> Result<impl warp::Reply, warp::Rejection> {
     let mut shared = shared.lock().unwrap();
-    let channel_info = shared.get_channel_info().ok_or_else(|| warp::reject())?;
+    let channel_info = match shared.get_channel_info() {
+        Some(v) => v,
+        None => {
+            return Ok(warp::reply::html(
+                "Failed to get channel info. Please ensure that node is running.".to_owned(),
+            ))
+        }
+    };
     let last_height = channel_info.height;
     let blocks: Vec<_> = (0..last_height)
         .filter_map(|h| shared.fetch_and_get_block(h))
         .collect();
-    use typed_html::types::LinkType;
     let css = Mime::from_str("text/css").unwrap();
 
     let doc: DOMTree<String> = html!(
@@ -41,12 +48,16 @@ pub async fn block(
     shared: Arc<Mutex<PeerCmd>>,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let mut shared = shared.lock().unwrap();
-    let block_info = shared
-        .fetch_and_get_block(height)
-        .ok_or_else(|| warp::reject())?;
-    use typed_html::types::LinkType;
-    let css = mime::Mime::from_str("text/css").unwrap();
+    let block_info = match shared.fetch_and_get_block(height) {
+        Some(v) => v,
+        None => {
+            return Ok(warp::reply::html(
+                "Failed to get block info. Please ensure that node is running.".to_owned(),
+            ))
+        }
+    };
 
+    let css = mime::Mime::from_str("text/css").unwrap();
     let doc: DOMTree<String> = html!(
         <html>
             <head>

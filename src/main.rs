@@ -13,12 +13,12 @@ use route::*;
 use std::sync::{Arc, Mutex};
 use warp::filters::path::Peek;
 use warp::reject;
+use warp::Filter;
 
 #[tokio::main]
 async fn main() {
-    use warp::Filter;
+    let peer_cmd = PeerCmd::new("mychannel"); // you can change the channel ID if needed
 
-    let peer_cmd = PeerCmd::new("mychannel");
     let shared = Arc::new(Mutex::new(peer_cmd));
     let shared = warp::any().map(move || Arc::clone(&shared));
 
@@ -40,27 +40,27 @@ async fn main() {
 
     let styles = warp::get().and(warp::path("styles.css")).map(|| {
         r#"
-                .block {
-                    width: 568px;
-                    min-height: 36px;
-                    border: 2px solid black;
-                    background: ghostwhite;
-                    padding-left: 15px;
-                    margin-top: 5px;
-                    border-radius: 4px;
-                }
-                .block-full {
-                    width: fit-content;
-                    border: 2px solid black;
-                    background: ghostwhite;
-                    padding-left: 15px;
-                    padding-right: 15px;
-                    padding-bottom: 15px;
-                    margin-top: 17px;
-                    border-radius: 6px;
-                    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-                }
-                "#
+        .block {
+            width: 568px;
+            min-height: 36px;
+            border: 2px solid black;
+            background: ghostwhite;
+            padding-left: 15px;
+            margin-top: 5px;
+            border-radius: 4px;
+        }
+        .block-full {
+            width: fit-content;
+            border: 2px solid black;
+            background: ghostwhite;
+            padding-left: 15px;
+            padding-right: 15px;
+            padding-bottom: 15px;
+            margin-top: 17px;
+            border-radius: 6px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+        "#
     });
     let routes = block.or(blocks).or(styles);
 
